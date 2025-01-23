@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>CMG</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+	</head>
+	<body>
+		<main class="container">
+			<h1>CMG</h1>
+			<form>
+				<fieldset>
+					<legend>General</legend>
+					<label>
+						Type
+						<select id="cmg-type" oninput="generateCommitMessage()">
+							<option selected value="feat">feat - New feature</option>
+							<option value="fix">fix - Bug fix</option>
+							<option value="docs">docs - Documentation update</option>
+							<option value="style">style - Code style changes (e.g. formatting)</option>
+							<option value="refactor">refactor - Code refactoring (no functionality change)</option>
+							<option value="test">test - Adding or updating tests</option>
+							<option value="chore">chore - Miscellaneous tasks (e.g. build, CI)</option>
+						</select>
+					</label>
+					<label>
+						Scope
+						<select id="cmg-scope" oninput="generateCommitMessage()">
+							<option selected value="api">api - Backend</option>
+							<option value="ui">ui - Frontend</option>
+						</select>
+					</label>
+					<label>
+						Short Description
+						<input id="cmg-short-description" oninput="generateCommitMessage()" type="text" />
+					</label>
+					<label>
+						Body
+						<textarea id="cmg-body" oninput="generateCommitMessage()" rows="5"></textarea>
+					</label>
+					<label>
+						Ticket Number
+						<input id="cmg-ticket-number" oninput="generateCommitMessage()" type="number" />
+					</label>
+				</fieldset>
+				<fieldset>
+					<legend>Miscellaneous</legend>
+					<label>
+						<input id="cmg-is-breaking-changes" oninput="generateCommitMessage()" type="checkbox" /> Is breaking changes?
+					</label>
+				</fieldset>
+				<fieldset>
+					<legend>Output</legend>
+					<label>
+						Commit Message
+						<textarea disabled id="cmg-commit-message" rows="10"></textarea>
+					</label>
+				</fieldset>
+				<input onclick="copyToClipboard(event)" type="button" value="Copy to clipboard" />
+			</form>
+		</main>
+		<script>
+			(function() {
+				function generateCommitMessage() {
+					const cmgType = document.getElementById("cmg-type");
+					const cmgScope = document.getElementById("cmg-scope");
+					const cmgShortDescription = document.getElementById("cmg-short-description");
+					const cmgBody = document.getElementById("cmg-body");
+					const cmgTicketNumber = document.getElementById("cmg-ticket-number");
+					const cmgIsBreakingChanges = document.getElementById("cmg-is-breaking-changes");
+
+					const type = cmgType.value;
+					const scope = cmgScope.value;
+					const shortDescription = cmgShortDescription.value || "N/A";
+					const body = cmgBody.value || "N/A";
+					const ticketNumber = cmgTicketNumber.value;
+					const isBreakingChanges = cmgIsBreakingChanges.checked;
+
+					let commitMessage = `${type}(${scope}): ${shortDescription}\n\n${body}\n\n`;
+
+					if (ticketNumber) {
+						const action = type === "fix" ? "Fixes" : "Closes";
+
+						commitMessage += `- ${action} #${ticketNumber}.\n`;
+					}
+
+					if (isBreakingChanges) {
+						commitMessage += "- This is BREAKING CHANGES.";
+					}
+
+					const cmgCommitMessage = document.getElementById("cmg-commit-message");
+
+					cmgCommitMessage.value = commitMessage.trim();
+				}
+
+				function copyToClipboard(event) {
+					const cmgCommitMessage = document.getElementById("cmg-commit-message");
+
+					navigator.clipboard.writeText(cmgCommitMessage.value).then(() => {}, () => window.alert("Failed to copy to clipboard"));
+				}
+
+				function populateForm() {
+					const searchParams = new URL(window.location.href).searchParams;
+
+					const type = searchParams.get("type");
+					const scope = searchParams.get("scope");
+					const ticketNumber = searchParams.get("ticket");
+
+					if (type) {
+						const cmgType = document.getElementById("cmg-type");
+						const cmgTypeOptions = [...cmgType.querySelectorAll("option")];
+
+						const cmgTypeOptionsSelected = cmgTypeOptions.filter(option => option.value === type.toLowerCase());
+						const cmgTypeOptionsUnselected = cmgTypeOptions.filter(option => option.value !== type.toLowerCase());
+
+						cmgTypeOptionsSelected.forEach(option => option.setAttribute("selected", "selected"));
+						cmgTypeOptionsUnselected.forEach(option => option.removeAttribute("selected"));
+					}
+
+					if (scope) {
+						const cmgScope = document.getElementById("cmg-scope");
+						const cmgScopeOptions = [...cmgScope.querySelectorAll("option")];
+
+						const cmgScopeOptionsSelected = cmgScopeOptions.filter(option => option.value === scope.toLowerCase());
+						const cmgScopeOptionsUnselected = cmgScopeOptions.filter(option => option.value !== scope.toLowerCase());
+
+						cmgScopeOptionsSelected.forEach(option => option.setAttribute("selected", "selected"));
+						cmgScopeOptionsUnselected.forEach(option => option.removeAttribute("selected"));
+					}
+
+					if (ticketNumber) {
+						if (!isNaN(parseInt(ticketNumber))) {
+							const cmgTicketNumber = document.getElementById("cmg-ticket-number");
+
+							cmgTicketNumber.value = parseInt(ticketNumber);
+						}
+					}
+				}
+
+				window.generateCommitMessage = generateCommitMessage;
+
+				window.copyToClipboard = copyToClipboard;
+
+				window.onload = populateForm;
+			})();
+		</script>
+	</body>
+</html>
