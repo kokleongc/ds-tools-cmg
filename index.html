@@ -49,6 +49,9 @@
 					<label>
 						<input id="cmg-is-breaking-changes" oninput="generateCommitMessage()" type="checkbox" /> Is breaking changes?
 					</label>
+					<label>
+						<input id="cmg-generate-simplified-commit-message" oninput="generateCommitMessage()" type="checkbox" /> Generate simplified commit message
+					</label>
 				</fieldset>
 				<fieldset>
 					<legend>Output</legend>
@@ -69,6 +72,7 @@
 					const cmgBody = document.getElementById("cmg-body");
 					const cmgTicketNumber = document.getElementById("cmg-ticket-number");
 					const cmgIsBreakingChanges = document.getElementById("cmg-is-breaking-changes");
+					const cmgGenerateSimplifiedCommitMessage = document.getElementById("cmg-generate-simplified-commit-message");
 
 					const type = cmgType.value;
 					const scope = cmgScope.value;
@@ -76,17 +80,22 @@
 					const body = cmgBody.value || "N/A";
 					const ticketNumber = cmgTicketNumber.value;
 					const isBreakingChanges = cmgIsBreakingChanges.checked;
+					const generateSimplifiedCommitMessage = cmgGenerateSimplifiedCommitMessage.checked;
 
-					let commitMessage = `${type}(${scope}): ${shortDescription}\n\n${body}\n\n`;
+					let commitMessage = `[${ticketNumber}] ${shortDescription}`;
 
-					if (ticketNumber) {
-						const action = type === "fix" ? "Fixes" : "Closes";
+					if (!generateSimplifiedCommitMessage) {
+						commitMessage = `${type}(${scope}): ${shortDescription}\n\n${body}\n\n`;
 
-						commitMessage += `- ${action} #${ticketNumber}.\n`;
-					}
+						if (ticketNumber) {
+							const action = type === "fix" ? "Fixes" : "Closes";
 
-					if (isBreakingChanges) {
-						commitMessage += "- This is BREAKING CHANGES.";
+							commitMessage += `- ${action} #${ticketNumber}.\n`;
+						}
+
+						if (isBreakingChanges) {
+							commitMessage += "- This is BREAKING CHANGES.";
+						}
 					}
 
 					const cmgCommitMessage = document.getElementById("cmg-commit-message");
